@@ -25,20 +25,32 @@ const Layout = ({ children }) => {
 
   return (
     <>
-      <Header siteTitle={data.site.siteMetadata.title} />
-      <div
-        style={{
-          margin: `0 auto`,
-          maxWidth: 960,
-          padding: `0 1.0875rem 1.45rem`,
-        }}
-      >
-        <main>{children}</main>
-        <footer>
-          © {new Date().getFullYear()}, Built with
-          {` `}
-          <a href="https://www.gatsbyjs.org">Gatsby</a>
-        </footer>
+      <div style={{
+        position: 'absolute',
+        minWidth: '100vw',
+        minHeight: '100vh',
+        backgroundColor: '#5D70A8',
+        color: 'white'
+      }}>
+        <div
+          style={{
+            margin: '100px auto',
+            maxWidth: 500,
+            minHeight: 500,
+            padding: `0 1.0875rem 1.45rem`,
+          }}
+        >
+          <div>{children}</div>
+          <footer style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0
+          }}>
+            © {new Date().getFullYear()}, Build by
+            {` `}
+            <a href="https://reifflabs.com/">Tyler J. Reiff</a>            
+          </footer>
+        </div>
       </div>
     </>
   )
