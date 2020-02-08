@@ -1,29 +1,28 @@
-import React, { useState } from "react"
-import Modal from "react-modal"
+import React, { useState, useEffect } from "react"
 
 import Layout from "../components/layout"
 import SEO from "../components/seo"
-import { useHabbitTracker } from "../hooks/useHabbitTracker"
+import { useHabitTracker } from "../hooks/useHabitTracker"
 
 function IndexPage() {
   return (
     <Layout>
-      <SEO title="Habbits" />
-      <HabbitGrid />
+      <SEO title="Habits" />
+      <HabitGrid />
     </Layout>
   )
 }
 
-function HabbitGrid() {
-  const { habbits, addHabbit } = useHabbitTracker()
+function HabitGrid() {
+  const { habits, addHabit, updateHabit, removeHabit } = useHabitTracker()
   const [isAddOpen, setIsAddOpen] = useState(false)
 
   return (
     <div>
-      <AddHabbitModal
+      <AddHabitModal
         isOpen={isAddOpen}
         onClose={() => setIsAddOpen(false)}
-        onAdd={addHabbit}
+        onAdd={addHabit}
       />
       <div
         style={{
@@ -33,16 +32,21 @@ function HabbitGrid() {
           gridGap: "1.5rem",
         }}
       >
-        {habbits?.map(i => (
-          <HabbitItem key={i.id} habbit={i} />
+        {habits?.map(i => (
+          <HabitItem
+            key={i.id}
+            Habit={i}
+            onComplete={() => updateHabit(i)}
+            onRemove={() => removeHabit(i.id)}
+          />
         ))}
-        <AddHabbitButton onAdd={() => setIsAddOpen(true)} />
+        <AddHabitButton onAdd={() => setIsAddOpen(true)} />
       </div>
     </div>
   )
 }
 
-function HabbitCard({ children }) {
+function HabitCard({ children }) {
   return (
     <div
       style={{
@@ -54,32 +58,89 @@ function HabbitCard({ children }) {
   )
 }
 
-interface HabbitItemProps {
-  habbit: any
+interface HabitItemProps {
+  Habit: any
+  onComplete: () => void
+  onRemove: () => void
 }
 
-function HabbitItem(props: HabbitItemProps) {
+function HabitItem(props: HabitItemProps) {
   const [isCongrats, setIsCongrats] = useState(false)
+  const [isDelete, setIsDelete] = useState(false)
+
+  function remove() {
+    props.onRemove()
+  }
 
   function complete() {
+    props.onComplete()
     setIsCongrats(true)
     setTimeout(() => {
       setIsCongrats(false)
     }, 2 * 1000)
   }
 
-  return (
-    <HabbitCard>
-      <div style={{ textAlign: "center", padding: "1.25rem" }}>
-        <h2>{props.habbit?.title}</h2>
-        <span>
-          {props.habbit?.streak} {props.habbit.cadence}
-        </span>
+  return isDelete ? (
+    <HabitCard>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100%",
+        }}
+        onClick={() => setIsDelete(false)}
+      >
+        <button
+          type="button"
+          style={{ background: "none", border: "none", outline: "none" }}
+          onClick={remove}
+        >
+          <svg
+            style={{
+              height: 100,
+              stroke: "grey",
+              transform: "rotate(45deg)",
+            }}
+            viewBox="0 0 100 100"
+          >
+            <circle
+              cx="50"
+              cy="50"
+              r="45"
+              fill="none"
+              strokeWidth="7.5"
+            ></circle>
+            <line x1="32.5" y1="50" x2="67.5" y2="50" strokeWidth="5"></line>
+            <line x1="50" y1="32.5" x2="50" y2="67.5" strokeWidth="5"></line>
+          </svg>
+        </button>
+      </div>
+    </HabitCard>
+  ) : (
+    <HabitCard>
+      <div
+        style={{
+          display: "flex",
+          textAlign: "center",
+          flexDirection: "column",
+          justifyContent: "space-between",
+        }}
+      >
+        <div onClick={() => setIsDelete(true)}>
+          <h2 >{props.Habit?.title}</h2>
+          <span>
+            {props.Habit?.streak} {props.Habit.cadence}{" "}
+            {props.Habit?.streak >= 5 ? "🔥" : null}
+          </span>
+        </div>
+        
         <button
           style={{
             border: "none",
             background: "none",
             outline: "none",
+            marginTop: "1.5rem",
           }}
           type="button"
           onClick={complete}
@@ -87,20 +148,20 @@ function HabbitItem(props: HabbitItemProps) {
           {isCongrats ? "Great Job! 🎉" : "Complete"}
         </button>
       </div>
-    </HabbitCard>
+    </HabitCard>
   )
 }
 
-interface ActionHabbitButtonProps {
+interface ActionHabitButtonProps {
   onAdd: () => void
 }
 
-function AddHabbitButton(props: ActionHabbitButtonProps) {
-  function addNewHabbit() {
+function AddHabitButton(props: ActionHabitButtonProps) {
+  function addNewHabit() {
     props.onAdd()
   }
   return (
-    <HabbitCard>
+    <HabitCard>
       <div
         style={{
           display: "flex",
@@ -112,7 +173,7 @@ function AddHabbitButton(props: ActionHabbitButtonProps) {
         <button
           type="button"
           style={{ background: "none", border: "none", outline: "none" }}
-          onClick={addNewHabbit}
+          onClick={addNewHabit}
         >
           <svg style={{ height: 100, stroke: "#4B5EA3" }} viewBox="0 0 100 100">
             <circle
@@ -127,39 +188,51 @@ function AddHabbitButton(props: ActionHabbitButtonProps) {
           </svg>
         </button>
       </div>
-    </HabbitCard>
+    </HabitCard>
   )
 }
 
-const customStyles = {
-  content: {
-    top: "50%",
-    left: "50%",
-    right: "auto",
-    bottom: "auto",
-    marginRight: "-50%",
-    transform: "translate(-50%, -50%)",
-  },
-}
-
-function AddHabbitModal(props) {
+function AddHabitModal(props) {
   const [title, setTitle] = useState(null)
+
   function submit() {
     props.onAdd(title)
+    setTitle(null)
     props.onClose()
   }
   return (
-    <Modal style={customStyles} isOpen={props.isOpen}>
-      <div
+    <div
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        fontSize: 28,
+        height: props.isOpen ? 50 : 0,
+        display: "flex",
+        justifyContent: "center",
+        transition: "height 1s",
+        visibility: props.isOpen ? "visible" : "hidden",
+      }}
+    >
+      <input
+        style={{ flex: 3 }}
+        value={title}
+        onChange={e => setTitle(e.target.value)}
+      />
+      <button
         style={{
-          display: "flex",
-          flexDirection: "row",
+          background: "none",
+          color: "white",
+          flex: 1,
+          border: "solid white",
         }}
+        type="button"
+        onClick={submit}
       >
-        <input value={title} onChange={e => setTitle(e.target.value)} />
-        <button onClick={submit}>Submit</button>
-      </div>
-    </Modal>
+        Submit
+      </button>
+    </div>
   )
 }
 
