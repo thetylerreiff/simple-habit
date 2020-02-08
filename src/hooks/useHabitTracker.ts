@@ -18,7 +18,7 @@ export function useHabitTracker() {
     localforage.getItem('HABBITS')
     .then((json: any) => {
       const res: HabitObject[] = JSON.parse(json)
-      setHabits(res)
+      setHabits(res || [])
     })
     .catch(console.warn)
 
